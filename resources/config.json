@@ -1,0 +1,12 @@
+{
+  "repositories": [
+    {
+      "name": "bosphorus",
+      "url": "git@gitlab.com:cxnpl/bosphorus-middleware.git"
+    },
+    {
+      "name": "webapp",
+      "url": "git@gitlab.com:cxnpl/webapp.git"
+    }
+  ]
+}

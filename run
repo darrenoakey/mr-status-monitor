@@ -1,0 +1,135 @@
+#!/usr/bin/env python3
+
+import argparse
+import subprocess
+import sys
+import os
+from pathlib import Path
+
+# ##################################################################
+# run shell command
+# executes a shell command and returns exit code
+def run_shell(cmd: list[str]) -> int:
+    return subprocess.call(cmd)
+
+# ##################################################################
+# command monitor
+# starts the gui application for monitoring merge requests
+def command_monitor(args: argparse.Namespace) -> int:
+    sys.path.insert(0, str(Path(__file__).parent))
+    from src.main import main
+    return main()
+
+# ##################################################################
+# command install
+# interactive setup to check dependencies and configure secrets
+def command_install(args: argparse.Namespace) -> int:
+    print("MR Status Monitor - Interactive Setup")
+    print("=" * 50)
+    print()
+
+    print("Checking dependencies...")
+    try:
+        import PySide6
+        import requests
+        import keyring
+        import colorama
+        import gitlab
+        print("✓ All Python dependencies installed")
+    except ImportError as err:
+        print(f"✗ Missing dependency: {err}")
+        print()
+        print("Please install dependencies:")
+        print("  pip install -r requirements.txt")
+        return 1
+
+    print()
+    print("Checking GitLab token...")
+    try:
+        import keyring
+        gitlab_token = keyring.get_password("gitlab", "token")
+        if gitlab_token:
+            print("✓ GitLab token found in keyring")
+        else:
+            print("✗ No GitLab token found")
+            print()
+            print("Please store your GitLab token:")
+            print("  python -c \"import keyring; keyring.set_password('gitlab', 'token', 'YOUR_TOKEN')\"")
+            print()
+            print("Get your token from: https://gitlab.com/-/user_settings/personal_access_tokens")
+            return 1
+    except Exception as err:
+        print(f"✗ Error checking GitLab token: {err}")
+        return 1
+
+    print()
+    print("Checking Slack token...")
+    try:
+        slack_token = keyring.get_password("slack", "token")
+        if slack_token:
+            print("✓ Slack token found in keyring")
+        else:
+            print("⚠ No Slack token found (optional - notifications will be disabled)")
+            print()
+            print("To enable Slack notifications:")
+            print("  python -c \"import keyring; keyring.set_password('slack', 'token', 'YOUR_TOKEN')\"")
+    except Exception as err:
+        print(f"⚠ Error checking Slack token: {err}")
+
+    print()
+    print("Checking configuration...")
+    config_file = Path(__file__).parent / "resources" / "config.json"
+    if config_file.exists():
+        print(f"✓ Configuration file found: {config_file}")
+        import json
+        with open(config_file, 'r') as f:
+            config = json.load(f)
+            repos = config.get('repositories', [])
+            print(f"  Configured repositories: {len(repos)}")
+            for repo in repos:
+                print(f"    - {repo['name']}: {repo['url']}")
+    else:
+        print(f"✗ Configuration file not found: {config_file}")
+        return 1
+
+    print()
+    print("=" * 50)
+    print("✓ Installation check complete!")
+    print()
+    print("To start the monitor:")
+    print("  ./run monitor")
+    print()
+
+    return 0
+
+# ##################################################################
+# command check
+# runs full test suite and quality gates via dazpycheck
+def command_check(args: argparse.Namespace) -> int:
+    return run_shell(["dazpycheck"])
+
+# ##################################################################
+# main entry point
+# parses arguments and dispatches to appropriate command handler
+def main(argv: list[str]) -> int:
+    parser = argparse.ArgumentParser(
+        description="MR Status Monitor - GitLab merge request monitoring tool")
+    sub = parser.add_subparsers(dest="cmd", required=True)
+
+    p_monitor = sub.add_parser("monitor", help="Start the GUI monitoring application")
+    p_monitor.set_defaults(func=command_monitor)
+
+    p_install = sub.add_parser("install", help="Interactive setup and dependency check")
+    p_install.set_defaults(func=command_install)
+
+    p_check = sub.add_parser("check", help="Run full test suite and quality gates (dazpycheck)")
+    p_check.set_defaults(func=command_check)
+
+    args = parser.parse_args(argv)
+    return args.func(args)
+
+# ##################################################################
+#
+# standard python pattern for dispatching main
+if __name__ == "__main__":
+    sys.exit(main(sys.argv[1:]))
