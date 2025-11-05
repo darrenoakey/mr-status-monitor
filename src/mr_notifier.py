@@ -172,7 +172,7 @@ class MRNotifier:
     # check and add coverage reviewers
     # adds coverage team members as reviewers when mr is otherwise approved
     def _check_and_add_coverage_reviewers(self, project_id: str, mr_iid: int, mr_data: Dict[str, Any]) -> bool:
-        from .gitlab_api import add_reviewers_to_mr
+        #from .gitlab_api import add_reviewers_to_mr
 
         try:
             if 'approval_status' not in mr_data or 'pipeline_status' not in mr_data:
@@ -187,10 +187,10 @@ class MRNotifier:
 
                 logger.info("mr approved with passing pipeline, adding coverage reviewers")
 
-                coverage_reviewers = ['AdityaM3', 'Tejas52']
-                if add_reviewers_to_mr(project_id, mr_iid, coverage_reviewers, self.gitlab_token):
-                    logger.info("added coverage reviewers to mr")
-                    return True
+                #coverage_reviewers = []
+                #if add_reviewers_to_mr(project_id, mr_iid, coverage_reviewers, self.gitlab_token):
+                #    logger.info("added coverage reviewers to mr")
+                #    return True
 
             return False
 
