@@ -180,3 +180,7 @@ Ensure local repository paths are configured correctly and the working directory
 Review logs in the `output/` directory:
 - `output/mr_status_monitor.log` - Main application log
 - `output/mr_status/mr_notifier.log` - Notification system log
+
+## License
+
+This project is licensed under [CC BY-NC 4.0](https://darren-static.waft.dev) - free to use and modify, but no commercial use without permission.
